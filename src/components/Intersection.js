@@ -1,20 +1,20 @@
+// @flow
+
 import React, { Component } from 'react';
 import IntersectionAgent from '../agents/IntersectionAgent';
 
 const THREE = require('three');
 
-export default class Intersection extends Component {
+type Props = {};
+type State = {
+    agents: Array<IntersectionAgent>
+};
 
-    constructor() {
-        super();
+export default class Intersection extends Component<Props, State> {
 
-        
-        this.state = {
-			agents: []
-		};
-
-		this.tick = this.tick.bind(this);
-    }
+    state = {
+        agents: [],
+    };
 
     componentDidMount() {
         let i = 0;
@@ -31,7 +31,7 @@ export default class Intersection extends Component {
         this.tick(0);
     }
 
-    tick(t) {
+    tick(t: number) {
         
         const context = this.refs.canvas.getContext('2d');
 		context.fillStyle = 'black';
