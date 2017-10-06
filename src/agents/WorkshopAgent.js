@@ -49,8 +49,8 @@ export default class WorkshopAgent extends Agent {
   static intentions = [0, 0, 1, 2];
 
   static speedSlow = 1;
-  static speedMedium = 2;
-  static speedFast = 3;
+  static speedMedium = 1.5;
+  static speedFast = 2;
 
   constructor(x: number, y: number, r: number) {
 
@@ -65,18 +65,18 @@ export default class WorkshopAgent extends Agent {
     this.cv = cv;
   }
 
-  next(): THREE.Vector3 {
+  next(factor:number = this.speed): THREE.Vector3 {
     return new THREE.Vector3(
-      this.x + this.speed * Math.cos(this.dir.value),
-      this.y + this.speed * Math.sin(this.dir.value),
+      this.x + factor * Math.cos(this.dir.value),
+      this.y + factor * Math.sin(this.dir.value),
       0
     );
   }
 
   ahead(): THREE.Vector3 {
     return new THREE.Vector3(
-      this.x + 5 * this.r * this.speed * Math.cos(this.dir.value),
-      this.y + 5 * this.r * this.speed * Math.sin(this.dir.value),
+      this.x + 5 * this.r * Math.cos(this.dir.value),
+      this.y + 5 * this.r * Math.sin(this.dir.value),
       0
     );
   }
@@ -101,6 +101,25 @@ export default class WorkshopAgent extends Agent {
   tick() {
 
     const origin = this.cv.origin;
+    const dim = this.cv.dim;
+    const center = new THREE.Vector3(dim / 2, dim / 2, 0);
+
+    // various vectors and values...
+    const toCenter = center.clone().sub(this).normalize();
+    const toNext = this.next().clone().sub(this).normalize();
+    const dot = toNext.dot(toCenter);
+    const aimedAtCenter = dot > 0;
+    const closeToCenter = this.distanceTo(center) < dim / 4;
+
+    const onStraightAway = (
+      (this.x > 0.43 * dim && this.x < 0.57 * dim) ||
+      (this.y > 0.43 * dim && this.y < 0.57 * dim)
+    );
+
+    // looking ahead in image coordinates
+    const ahead = this.ahead();
+
+    // left/right in *screen* coordinates (to get pixel data)
     const left = this.scanLeft().add(origin);
     const right = this.scanRight().add(origin);
 
@@ -111,62 +130,24 @@ export default class WorkshopAgent extends Agent {
     const rightData = context.getImageData(right.x, right.y, 1, 1).data;
     const rightIsBlack = rightData[0] === 0 && rightData[1] === 0 && rightData[2] === 0;
 
+    // reset speed
+    this.speed = WorkshopAgent.speedMedium;
+
     // turn right
     if (leftIsBlack && !rightIsBlack) this.dir.add(0.2);
 
     // turn left
     if (!leftIsBlack && rightIsBlack) this.dir.sub(0.2);
 
-    // sharp turn
-    if (leftIsBlack && rightIsBlack) {
-      this.dir.add(Math.PI / 2);
-    }
+    // if about to run off the road, make a sharp turn
+    if (leftIsBlack && rightIsBlack) this.dir.add(Math.PI / 2);
 
-    // collision with other agents
-    // TODO
-		// this.cv.state.agents.filter(agent => this !== agent).forEach(neighbor => {
-		// 	if (this.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {
-		// 		const a = this.angleTo(neighbor);
-		// 		this.dir.add(-a);
-		// 		neighbor.dir.add(a);
-		// 	}
-		// });
-
-    const next = this.next();
-
-    this.set(next.x, next.y, 0);
-
-    return this;
-  }
-
-  // Override
-  draw() {
-    
-    const context = this.cv.context;
-    if (context === null) throw new Error("Agent needs a context to draw!");
-
-    const origin = this.cv.origin;
-    const dim = this.cv.dim;
-
-    const center = new THREE.Vector3(dim / 2, dim / 2, 0);
-
-    const onStraightAway = (
-      (this.x > 0.43 * dim && this.x < 0.57 * dim) ||
-      (this.y > 0.43 * dim && this.y < 0.57 * dim)
-    );
-
-    const toCenter = center.clone().sub(this).normalize();
-    const toNext = this.next().clone().sub(this).normalize();
-    const dot = toNext.dot(toCenter);
-    const aimedAtCenter = dot > 0;
-    const closeToCenter = this.distanceTo(center) < dim / 4;
-    
-    // approaching intersection, set an intention --
+    // if approaching intersection, set an intention --
     // - straight = 0
     // - left = 1
     // - right = 2
     if (!this.nearIntersection && closeToCenter) this.intention = _.sample(WorkshopAgent.intentions);
-
+    
     this.nearIntersection = closeToCenter;
 
     if (this.nearIntersection) {
@@ -185,37 +166,93 @@ export default class WorkshopAgent extends Agent {
       if (!aimedAtCenter) this.speed = WorkshopAgent.speedFast;
     }
 
-    context.fillStyle = 'white';
-    
-    // angle toward center
+    // if not near the intersection but aimed toward it
+    // and on a straightaway, veer toward the center
     if (!this.nearIntersection && onStraightAway && aimedAtCenter) {
-      // HOW TO DO THIS???
       const c = this.clone().sub(center);
       const angle = Math.atan2(c.y, c.x) + Math.PI;
       const ave = (9 * this.dir.value + angle) / 10;
       this.dir.set(ave);
-      context.fillStyle = 'blue';
     }
 
-    // context.fillStyle = onStraightAway ? 'white' : 'yellow';
-    // if (this.nearIntersection) {
-    //   context.fillStyle = 'red';
-    //   if (this.intention === 1) {
-    //     context.fillStyle = 'green';
-    //   } else if (this.intention === 2) {
-    //     context.fillStyle = 'blue';
-    //   }
-    // }
+    let step = new THREE.Vector3();
+
+    // collision detection
+		this.cv.state.agents.filter(agent => this !== agent).forEach(neighbor => {
+			if (ahead.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {
+        // this.dir.add(0.2);
+        // this.speed = -WorkshopAgent.speedSlow;
+      }
+      
+      // step away from
+      if (this.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {
+        const away = this.clone().sub(neighbor);
+        away.multiplyScalar(0.1);
+        step.add(away);
+      }
+    });
+
+    // finally, set the new position
+    const next = this.next().clone().add(step);
+    this.set(next.x, next.y, 0);
+
+    return this;
+  }
+
+  // Override
+  draw() {
+    
+    const context = this.cv.context;
+    const origin = this.cv.origin;
+
+    context.save();
+
+    context.fillStyle = 'white';
     
     context.beginPath();
-    context.arc(
-      origin.x + this.x, 
-      origin.y + this.y, 
-      this.r, 
-      0, 
-      2 * Math.PI
-    );
+
+    let a = this.next(2 * this.r);
+    context.moveTo(origin.x + a.x, origin.y + a.y);
+
+    a = this.next(1.2 * this.r);
+
+    a.sub(this);
+    a.applyAxisAngle(WorkshopAgent.Z, 3 * Math.PI / 4);
+    a.add(this);
+
+    context.lineTo(origin.x + a.x, origin.y + a.y);
+
+    a.sub(this);
+    a.applyAxisAngle(WorkshopAgent.Z, -1.5 * Math.PI);
+    a.add(this);
+
+    context.lineTo(origin.x + a.x, origin.y + a.y);
+
     context.fill();
+
+    // context.fillStyle = 'red';
+    // context.beginPath();
+    // context.arc(
+    //   origin.x + this.x, 
+    //   origin.y + this.y, 
+    //   this.r / 2, 
+    //   0, 
+    //   2 * Math.PI
+    // );
+    // context.fill();
+
+    // draw ahead circle
+    // context.globalAlpha = 0.4;
+    // context.beginPath();
+    // context.fillStyle = 'yellow';
+    // const ahead = this.ahead();
+    // context.arc(
+    //   origin.x + ahead.x,
+    //   origin.y + ahead.y,
+    //   1.4 * 2 * this.r,
+    //   0, 2 * Math.PI
+    // );
+    // context.fill();
 
     // draw left and right spots
 
@@ -228,5 +265,7 @@ export default class WorkshopAgent extends Agent {
     // context.beginPath();
     // context.arc(this.scanRight().x, this.scanRight().y, this.r / 3, 0, 2 * Math.PI);
     // context.fill();
+
+    context.restore();
   }
 };

@@ -173,6 +173,7 @@ export default class CanvasView extends Component {
 		super();
 
 		this.state = {
+      running: true,
 			agents: []
 		};
 
@@ -181,16 +182,20 @@ export default class CanvasView extends Component {
 
 	componentDidMount() {
 
-		let i = 0;
-    for (i = 0; i < 70; i++) {
+    for (let i = 0; i < 70; i++) {
       const agents = this.state.agents;
 			let a = new Agent(
         40 + (Math.random() * window.innerWidth - 40), 
         40 + (Math.random() * window.innerHeight - 40), 
         this
       );
-			agents.push(a);
-			this.state = { agents };
+
+      agents.push(a);
+      
+			this.state = { 
+        running: true,
+        agents 
+      };
     }
 
 		this.tick(0);
@@ -214,9 +219,18 @@ export default class CanvasView extends Component {
 		    if (activeIndex < 0) activeIndex += this.state.agents.length - 1;
 		  }
 		});
-	}
+  }
+  
+  componentWillUnmount() {
+    this.setState({ 
+      running: false,
+      agents: [] 
+    });
+  }
 
 	tick(t) {
+
+    if (!this.state.running || !this.refs.canvas) return;
 
 		const context = this.refs.canvas.getContext('2d');
 		context.fillStyle = 'black';

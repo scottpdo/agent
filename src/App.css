@@ -2,6 +2,22 @@
   position: relative;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 body {
+  font-family: sans-serif;
   overflow: hidden;
+}
+
+.home {
+  padding: 20px;
+  text-align: center;
+}
+
+.home__link {
+  display: inline-block;
+  margin-right: 20px;
 }

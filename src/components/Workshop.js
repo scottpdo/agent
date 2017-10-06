@@ -28,7 +28,7 @@ class Workshop extends Component<Props, State> {
     onClick: Function;
     init: Function;
 
-    static capacity = 5;
+    static capacity = 100;
 
     constructor() {
 
