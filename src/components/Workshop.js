@@ -1,12 +1,15 @@
 // @flow
 
 import React, { Component } from 'react';
+import _ from 'lodash';
 import WorkshopAgent from '../agents/WorkshopAgent';
 
 import imgUrl from '../img/clover.png';
 
 const img = document.createElement('img');
 img.src = imgUrl;
+
+const THREE = require('three');
 
 type Props = {};
 type State = {
@@ -17,11 +20,15 @@ class Workshop extends Component<Props, State> {
 
     canvas: HTMLCanvasElement;
     running: boolean;
+    origin: THREE.Vector3;
+    dim: number;
 
     drawBackground: Function;
     draw: Function;
     onClick: Function;
     init: Function;
+
+    static capacity = 80;
 
     constructor() {
 
@@ -49,11 +56,9 @@ class Workshop extends Component<Props, State> {
         
         const r = Math.round(Math.max(window.innerWidth, window.innerHeight) / 200);
 
-        while (agents.length < 100) {
+        while (agents.length < Workshop.capacity) {
 
-            const x = Math.round(Math.random() * window.innerWidth);
-            const y = Math.round(Math.random() * window.innerHeight);
-            const agent = new WorkshopAgent(x, y, r);
+            const agent = new WorkshopAgent(0, 0, r);
             agent.setContext(this.context);
             
             agents.push(agent);
@@ -73,16 +78,21 @@ class Workshop extends Component<Props, State> {
         
         // coerce all agents onto the clover
         this.state.agents.forEach((agent) => {
+
+            // set origin
+            agent.setOrigin(this.origin);
+            // set dimension
+            agent.setDim(this.dim);
             
             const data = this.context.getImageData(agent.x, agent.y, 1, 1).data;
             let isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
 
             while (isBlack) {
 
-                agent.x = Math.round(Math.random() * window.innerWidth);
-                agent.y = Math.round(Math.random() * window.innerHeight);
+                agent.x = Math.round(Math.random() * this.dim);
+                agent.y = Math.round(Math.random() * this.dim);
 
-                const data = this.context.getImageData(agent.x, agent.y, 1, 1).data;
+                const data = this.context.getImageData(agent.origin.x + agent.x, agent.origin.y + agent.y, 1, 1).data;
 
                 isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
             }
@@ -101,11 +111,13 @@ class Workshop extends Component<Props, State> {
         this.context.fillStyle = 'black';
         this.context.fillRect(0, 0, w, h);
 
-        const dim = w > h ? h : w;
-        const x = w > h ? (w - dim) / 2 : 0;
-        const y = w > h ? 0 : (h - dim) / 2;
+        this.dim = w > h ? h : w;
+        const x = w > h ? (w - this.dim) / 2 : 0;
+        const y = w > h ? 0 : (h - this.dim) / 2;
 
-        this.context.drawImage(img, x, y, dim, dim);
+        if (_.isNil(this.origin)) this.origin = new THREE.Vector3(x, y, 0);
+
+        this.context.drawImage(img, x, y, this.dim, this.dim);
     }
 
     draw() {

@@ -3,7 +3,7 @@
 import React, { Component } from 'react';
 import IntersectionAgent from '../agents/IntersectionAgent';
 
-const THREE = require('three');
+// const THREE = require('three');
 
 type Props = {};
 type State = {
