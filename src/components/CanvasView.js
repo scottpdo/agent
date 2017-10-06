@@ -143,7 +143,7 @@ class Agent extends Point {
       // dotted
       const a = angle(this.n1, this.n2) + Math.PI / 2;
       const mid = { x: (this.n1.x + this.n2.x) / 2, y: (this.n1.y + this.n2.y) / 2 };
-      const l = new PointSlopeLine(mid, a);
+      // const l = new PointSlopeLine(mid, a);
       // const c = l.closest(this);
       
       context.strokeStyle = 'white';

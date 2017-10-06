@@ -28,7 +28,7 @@ class Workshop extends Component<Props, State> {
     onClick: Function;
     init: Function;
 
-    static capacity = 80;
+    static capacity = 5;
 
     constructor() {
 
@@ -59,7 +59,7 @@ class Workshop extends Component<Props, State> {
         while (agents.length < Workshop.capacity) {
 
             const agent = new WorkshopAgent(0, 0, r);
-            agent.setContext(this.context);
+            agent.setCanvasView(this);
             
             agents.push(agent);
         }
@@ -78,11 +78,6 @@ class Workshop extends Component<Props, State> {
         
         // coerce all agents onto the clover
         this.state.agents.forEach((agent) => {
-
-            // set origin
-            agent.setOrigin(this.origin);
-            // set dimension
-            agent.setDim(this.dim);
             
             const data = this.context.getImageData(agent.x, agent.y, 1, 1).data;
             let isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
@@ -92,7 +87,7 @@ class Workshop extends Component<Props, State> {
                 agent.x = Math.round(Math.random() * this.dim);
                 agent.y = Math.round(Math.random() * this.dim);
 
-                const data = this.context.getImageData(agent.origin.x + agent.x, agent.origin.y + agent.y, 1, 1).data;
+                const data = this.context.getImageData(this.origin.x + agent.x, this.origin.y + agent.y, 1, 1).data;
 
                 isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
             }
