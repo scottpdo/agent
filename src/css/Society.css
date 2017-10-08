@@ -1,0 +1,25 @@
+body {
+	background: #fff;
+}
+
+.container {
+	padding: 20px;
+}
+
+.button {
+	display: inline-block;
+	margin: 20px 20px 20px 0;
+}
+
+.population {
+	float: left;
+	margin-right: 40px;
+	width: 500px;
+}
+
+.info {
+	color: #666;
+	min-height: 400px;
+	overflow-x: scroll;
+	width: 400px;
+}

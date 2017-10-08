@@ -167,7 +167,7 @@ class Agent extends Point {
 	}
 }
 
-export default class CanvasView extends Component {
+export default class SystemsGame extends Component {
 
 	constructor() {
 		super();

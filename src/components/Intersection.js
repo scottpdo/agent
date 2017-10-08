@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react';
 import _ from 'lodash';
-import WorkshopAgent from '../agents/WorkshopAgent';
+import IntersectionAgent from '../agents/IntersectionAgent';
 
 import imgUrl from '../img/clover.png';
 
@@ -13,10 +13,10 @@ const THREE = require('three');
 
 type Props = {};
 type State = {
-    agents: Array<WorkshopAgent>
+    agents: Array<IntersectionAgent>
 };
 
-class Workshop extends Component<Props, State> {
+class Intersection extends Component<Props, State> {
 
     canvas: HTMLCanvasElement;
     running: boolean;
@@ -56,9 +56,9 @@ class Workshop extends Component<Props, State> {
         
         const r = Math.round(Math.max(window.innerWidth, window.innerHeight) / 200);
 
-        while (agents.length < Workshop.capacity) {
+        while (agents.length < Intersection.capacity) {
 
-            const agent = new WorkshopAgent(0, 0, r);
+            const agent = new IntersectionAgent(0, 0, r);
             agent.setCanvasView(this);
             
             agents.push(agent);
@@ -137,4 +137,4 @@ class Workshop extends Component<Props, State> {
     }
 }
 
-export default Workshop;
+export default Intersection;

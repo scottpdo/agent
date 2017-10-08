@@ -2,7 +2,7 @@
 
 import _ from 'lodash';
 import Agent from './Agent';
-import Workshop from '../components/Workshop';
+import Intersection from '../components/Intersection';
 
 const THREE = require('three');
 
