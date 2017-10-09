@@ -93,7 +93,7 @@ class SocietyView extends Component {
     let height = 2 * citizens.filter(citizen => citizen.alive).length;
     const width = 2;
     let x = 2 * (this.state.society.year - 2017);
-    let y = 0;
+    // let y = 0;
     
     citizens = _.sortBy(citizens, [(citizen) => citizen.birthYear]);
 
@@ -113,31 +113,8 @@ class SocietyView extends Component {
 
     const citizens = this.state.society.citizens;
 
-    const renderCitizen = (citizen, i) => {
-
-      const style = {
-        fontWeight: citizen.elder ? 'bold' : 'normal',
-        textDecoration: citizen.alive ? 'none' : 'line-through'
-      };
-
-      if (!this.state.showDead && !citizen.alive) return null;
-
-      return (
-        <p 
-          key={citizen.id} 
-          style={style} 
-          onClick={this.showHistory.bind(this, citizen)}>
-          {citizen.fullName()} - <small>{citizen.age}</small>
-        </p>
-      );
-    };
-
-    const renderElder = (citizen, i) => {
-      return citizen.elder ? citizen.fullName() : null;
-    };
-
-    const names = _.map(citizens, renderCitizen);
-    const elders = _.compact(_.map(citizens, renderElder)).join(', ');
+    // const names = _.map(citizens, renderCitizen);
+    // const elders = _.compact(_.map(citizens, renderElder)).join(', ');
 
     let meanAge = 0;
     let alive = citizens.filter(citizen => citizen.alive);

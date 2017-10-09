@@ -1,14 +1,23 @@
+// @flow
+
 import _ from 'lodash';
 import uuid from 'uuid/v1';
 
 import demographics from '../../data/demographics';
 
 import Citizen from '../individuals/Citizen';
+import Society from './Society';
 import LifeEvent from '../LifeEvent';
 
+
 export default class Family {
+
+    size: number;
+    society: Society;
+    members: Array<Citizen>;
+    name: string;
     
-    constructor(society) {
+    constructor(society: Society) {
 
         this.size = 0;
         this.society = society;
@@ -18,7 +27,7 @@ export default class Family {
         this.seed();
     }
     
-    addChild(a, b, year) {
+    addChild(a: Citizen, b: Citizen, year: number): Citizen {
 
         if (_.isNil(year)) year = this.society.year;
 
@@ -92,7 +101,7 @@ export default class Family {
         b.getEvent(year, "marry", a).year = birthOfYoungestChild;
     }
 
-    info() {
+    info(): string {
         return this.name + ": " + this.size;
     }
 };

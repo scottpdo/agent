@@ -2,6 +2,7 @@
 
 import _ from 'lodash';
 import Agent from './Agent';
+
 import Intersection from '../components/Intersection';
 
 const THREE = require('three');
@@ -36,14 +37,14 @@ class Direction {
   }
 }
 
-export default class WorkshopAgent extends Agent {
+export default class IntersectionAgent extends Agent {
 
   r: number;
   dir: Direction;
   speed: number;
   nearIntersection: boolean;
   intention: number; // 0 = straight, 1 = left, 2 = right
-  cv: Workshop;
+  cv: Intersection;
 
   static Z = new THREE.Vector3(0, 0, 1);
   static intentions = [0, 0, 1, 2];
@@ -58,10 +59,10 @@ export default class WorkshopAgent extends Agent {
     
     this.r = r;
     this.dir = new Direction(Math.random() * (2 * Math.PI));
-    this.speed = WorkshopAgent.speedMedium;
+    this.speed = IntersectionAgent.speedMedium;
   }
 
-  setCanvasView(cv: Workshop) {
+  setCanvasView(cv: Intersection) {
     this.cv = cv;
   }
 
@@ -84,7 +85,7 @@ export default class WorkshopAgent extends Agent {
   scanLeft(): THREE.Vector3 {
     const ahead = this.ahead();
     ahead.sub(this);
-    ahead.applyAxisAngle(WorkshopAgent.Z, -0.33);
+    ahead.applyAxisAngle(IntersectionAgent.Z, -0.33);
     ahead.add(this);
     return ahead;
   }
@@ -92,7 +93,7 @@ export default class WorkshopAgent extends Agent {
   scanRight(): THREE.Vector3 {
     const ahead = this.ahead();
     ahead.sub(this);
-    ahead.applyAxisAngle(WorkshopAgent.Z, 0.33);
+    ahead.applyAxisAngle(IntersectionAgent.Z, 0.33);
     ahead.add(this);
     return ahead;
   }
@@ -131,7 +132,7 @@ export default class WorkshopAgent extends Agent {
     const rightIsBlack = rightData[0] === 0 && rightData[1] === 0 && rightData[2] === 0;
 
     // reset speed
-    this.speed = WorkshopAgent.speedMedium;
+    this.speed = IntersectionAgent.speedMedium;
 
     // turn right
     if (leftIsBlack && !rightIsBlack) this.dir.add(0.2);
@@ -146,14 +147,14 @@ export default class WorkshopAgent extends Agent {
     // - straight = 0
     // - left = 1
     // - right = 2
-    if (!this.nearIntersection && closeToCenter) this.intention = _.sample(WorkshopAgent.intentions);
+    if (!this.nearIntersection && closeToCenter) this.intention = _.sample(IntersectionAgent.intentions);
     
     this.nearIntersection = closeToCenter;
 
     if (this.nearIntersection) {
 
       // assume we're approaching the intersection and slow down
-      this.speed = WorkshopAgent.speedSlow;
+      this.speed = IntersectionAgent.speedSlow;
 
       // slowly turn left
       if (this.intention === 1) {
@@ -163,7 +164,7 @@ export default class WorkshopAgent extends Agent {
       }
 
       // if departing, speed up
-      if (!aimedAtCenter) this.speed = WorkshopAgent.speedFast;
+      if (!aimedAtCenter) this.speed = IntersectionAgent.speedFast;
     }
 
     // if not near the intersection but aimed toward it
@@ -181,7 +182,7 @@ export default class WorkshopAgent extends Agent {
 		this.cv.state.agents.filter(agent => this !== agent).forEach(neighbor => {
 			if (ahead.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {
         // this.dir.add(0.2);
-        // this.speed = -WorkshopAgent.speedSlow;
+        // this.speed = -IntersectionAgent.speedSlow;
       }
       
       // step away from
@@ -217,13 +218,13 @@ export default class WorkshopAgent extends Agent {
     a = this.next(1.2 * this.r);
 
     a.sub(this);
-    a.applyAxisAngle(WorkshopAgent.Z, 3 * Math.PI / 4);
+    a.applyAxisAngle(IntersectionAgent.Z, 3 * Math.PI / 4);
     a.add(this);
 
     context.lineTo(origin.x + a.x, origin.y + a.y);
 
     a.sub(this);
-    a.applyAxisAngle(WorkshopAgent.Z, -1.5 * Math.PI);
+    a.applyAxisAngle(IntersectionAgent.Z, -1.5 * Math.PI);
     a.add(this);
 
     context.lineTo(origin.x + a.x, origin.y + a.y);
