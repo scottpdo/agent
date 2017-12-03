@@ -1,12 +1,8 @@
 import _ from 'lodash';
-import uuid from 'uuid/v1';
 
 import demographics from '../../data/demographics';
-import firstnames from '../../data/firstnames';
-import lastnames from '../../data/lastnames';
 
 import Family from './Family';
-import Citizen from '../individuals/Citizen';
 
 export default class Society {
 
