@@ -1,11 +1,10 @@
 // @flow
 
 import _ from 'lodash';
+import * as THREE from 'three';
 import Agent from './Agent';
 
 import Intersection from '../components/Intersection';
-
-const THREE = require('three');
 
 class Direction {
 
@@ -49,21 +48,31 @@ export default class IntersectionAgent extends Agent {
   static Z = new THREE.Vector3(0, 0, 1);
   static intentions = [0, 0, 1, 2];
 
-  static speedSlow = 1;
-  static speedMedium = 1.5;
-  static speedFast = 2;
-
   constructor(x: number, y: number, r: number) {
 
     super(x, y, 0);
     
     this.r = r;
     this.dir = new Direction(Math.random() * (2 * Math.PI));
-    this.speed = IntersectionAgent.speedMedium;
+    this.speed = 0;
   }
 
   setCanvasView(cv: Intersection) {
     this.cv = cv;
+    this.speed = this.defaultSpeed();
+  }
+
+  defaultSpeed(): number {
+    if (_.isNil(this.cv)) throw new Error("Must have an Intersection to know the speed limit!");
+    return this.cv.speedLimit / 3;
+  }
+
+  speedUp() {
+    // this.speed = this.cv.speedLimit;
+  }
+
+  slowDown() {
+    // this.speed = this.defaultSpeed() / 2;
   }
 
   next(factor:number = this.speed): THREE.Vector3 {
@@ -117,9 +126,6 @@ export default class IntersectionAgent extends Agent {
       (this.y > 0.43 * dim && this.y < 0.57 * dim)
     );
 
-    // looking ahead in image coordinates
-    const ahead = this.ahead();
-
     // left/right in *screen* coordinates (to get pixel data)
     const left = this.scanLeft().add(origin);
     const right = this.scanRight().add(origin);
@@ -132,7 +138,7 @@ export default class IntersectionAgent extends Agent {
     const rightIsBlack = rightData[0] === 0 && rightData[1] === 0 && rightData[2] === 0;
 
     // reset speed
-    this.speed = IntersectionAgent.speedMedium;
+    this.speed = this.defaultSpeed();
 
     // turn right
     if (leftIsBlack && !rightIsBlack) this.dir.add(0.2);
@@ -154,7 +160,7 @@ export default class IntersectionAgent extends Agent {
     if (this.nearIntersection) {
 
       // assume we're approaching the intersection and slow down
-      this.speed = IntersectionAgent.speedSlow;
+      this.slowDown();
 
       // slowly turn left
       if (this.intention === 1) {
@@ -162,10 +168,10 @@ export default class IntersectionAgent extends Agent {
       } else if (this.intention === 2) {
         this.dir.add(0.01);
       }
-
-      // if departing, speed up
-      if (!aimedAtCenter) this.speed = IntersectionAgent.speedFast;
     }
+
+    // if departing, speed up
+    if (!aimedAtCenter || !this.nearIntersection) this.speedUp();
 
     // if not near the intersection but aimed toward it
     // and on a straightaway, veer toward the center
@@ -180,10 +186,6 @@ export default class IntersectionAgent extends Agent {
 
     // collision detection
 		this.cv.state.agents.filter(agent => this !== agent).forEach(neighbor => {
-			if (ahead.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {
-        // this.dir.add(0.2);
-        // this.speed = -IntersectionAgent.speedSlow;
-      }
       
       // step away from
       if (this.distanceTo(neighbor) < 1.4 * (this.r + neighbor.r)) {

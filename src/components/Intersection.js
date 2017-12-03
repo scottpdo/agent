@@ -2,6 +2,7 @@
 
 import React, { Component } from 'react';
 import _ from 'lodash';
+import IntersectionControls from './IntersectionControls';
 import IntersectionAgent from '../agents/IntersectionAgent';
 
 import imgUrl from '../img/clover.png';
@@ -13,7 +14,8 @@ const THREE = require('three');
 
 type Props = {};
 type State = {
-    agents: Array<IntersectionAgent>
+    agents: Array<IntersectionAgent>,
+    i: number
 };
 
 class Intersection extends Component<Props, State> {
@@ -22,29 +24,37 @@ class Intersection extends Component<Props, State> {
     running: boolean;
     origin: THREE.Vector3;
     dim: number;
+    speedLimit: number;
 
     drawBackground: Function;
     draw: Function;
     onClick: Function;
+    toggleRunning: Function;
     init: Function;
+    controls: Object;
 
-    static capacity = 100;
+    static capacity = 50;
 
     constructor() {
 
         super();
 
         this.state = {
-            agents: []
+            agents: [],
+            i: 0
         };
 
         this.running = true;
 
         this.init = this.init.bind(this);
         this.onClick = this.onClick.bind(this);
+        this.toggleRunning = this.toggleRunning.bind(this);
         this.draw = this.draw.bind(this);
         this.drawBackground = this.drawBackground.bind(this);
 
+        this.controls = {
+            toggleRunning: this.toggleRunning
+        };
     }
 
     componentDidMount() {
@@ -110,6 +120,8 @@ class Intersection extends Component<Props, State> {
         const x = w > h ? (w - this.dim) / 2 : 0;
         const y = w > h ? 0 : (h - this.dim) / 2;
 
+        this.speedLimit = this.dim * 0.006;
+
         if (_.isNil(this.origin)) this.origin = new THREE.Vector3(x, y, 0);
 
         this.context.drawImage(img, x, y, this.dim, this.dim);
@@ -126,14 +138,23 @@ class Intersection extends Component<Props, State> {
 
         window.requestAnimationFrame(this.draw);
     }
-    
-    onClick() {
+
+    toggleRunning() {
         this.running = !this.running;
         if (this.running) this.draw();
+        this.setState({ i: this.state.i + 1 });
+    }
+    
+    onClick() {
     }
 
     render() {
-        return <canvas ref="canvas" width={window.innerWidth} height={window.innerHeight} />;
+        return (
+            <div>
+                <canvas ref="canvas" width={window.innerWidth} height={window.innerHeight} />
+                <IntersectionControls controls={this.controls} running={this.running} />
+            </div>
+        );
     }
 }
 
