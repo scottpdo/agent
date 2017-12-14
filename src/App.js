@@ -4,6 +4,8 @@ import { Route, Link } from 'react-router-dom';
 import SystemsGame from './components/SystemsGame';
 import SocietyView from './components/SocietyView';
 import Intersection from './components/Intersection';
+import Ovation from './components/Ovation';
+import BMIEnvironment from './components/BMIEnvironment';
 
 import './App.css';
 
@@ -15,6 +17,7 @@ class Home extends Component {
         <Link className="home__link" to="/sysgame">Systems Game</Link>
         <Link className="home__link" to="/society">Society (of Families)</Link>
         <Link className="home__link" to="/intersection">Intersection</Link>
+        <Link className="home__link" to="/bmi">BMI</Link>
       </div>
     )
   }
@@ -28,6 +31,8 @@ class App extends Component {
         <Route path="/sysgame" component={SystemsGame} />
         <Route path="/society" component={SocietyView} />
         <Route path="/intersection" component={Intersection} />
+        <Route path="/ovation" component={Ovation} />
+        <Route path="/bmi" component={BMIEnvironment} />
       </div>
     );
   }

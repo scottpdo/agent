@@ -1,8 +1,12 @@
 // @flow
 
 import * as THREE from 'three';
+import Graph from '../components/Graph';
 
 export default class Agent extends THREE.Vector3 {
+
+    graph: ?Graph = null;
+    key: string = THREE.Math.generateUUID();
 
     constructor(x: number, y: number, z:number = 0) {
         super(x, y, z);
