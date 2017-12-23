@@ -1,7 +1,7 @@
 // @flow
 
 import Agent from './Agent';
-import Graph from '../components/Graph';
+import Graph from '../components/structures/Graph';
 
 export default (graph: Graph, meanDegree: number, prob: number) => {
 

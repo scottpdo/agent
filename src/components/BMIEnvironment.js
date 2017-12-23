@@ -6,7 +6,7 @@ import queryString from 'query-string';
 
 import BMIAgent from '../agents/BMIAgent';
 import WattsStrogatz from '../agents/WattsStrogatz';
-import Graph from './Graph';
+import Graph from './structures/Graph';
 
 type Props = {};
 type State = {
@@ -26,10 +26,12 @@ export default class BMIEnvironment extends Component<Props, State> {
 
   canvas: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
+  drawInterval: number;
   graph: Graph = new Graph();
   COUNT: number = 100;
   WIDTH: number = 600;
   HEIGHT: number = 600;
+  title: string = "BMI";
 
   // shape and rate parameters for gamma distribution
   shape: number = 3;
@@ -82,6 +84,8 @@ export default class BMIEnvironment extends Component<Props, State> {
    */
   componentDidMount() {
 
+    document.title = this.title;
+
     this.canvas = this.refs.canvas;
     this.context = this.canvas.getContext('2d');
 
@@ -126,7 +130,11 @@ export default class BMIEnvironment extends Component<Props, State> {
     }
 
     // go go go
-    setInterval(this.tick, 50);
+    this.drawInterval = setInterval(this.tick, 50);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.drawInterval);
   }
 
   // Helper function to draw y value on chart

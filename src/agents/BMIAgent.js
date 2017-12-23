@@ -2,7 +2,7 @@
 
 import * as THREE from 'three';
 import Agent from './Agent';
-import Graph from '../components/Graph';
+import Graph from '../components/structures/Graph';
 
 export default class ObesityAgent extends Agent {
 

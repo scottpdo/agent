@@ -169,6 +169,8 @@ class Agent extends Point {
 
 export default class SystemsGame extends Component {
 
+  title = "Systems Game";
+
 	constructor() {
 		super();
 
@@ -181,6 +183,8 @@ export default class SystemsGame extends Component {
 	}
 
 	componentDidMount() {
+
+    document.title = this.title;
 
     for (let i = 0; i < 70; i++) {
       const agents = this.state.agents;

@@ -25,6 +25,7 @@ class Intersection extends Component<Props, State> {
     origin: THREE.Vector3;
     dim: number;
     speedLimit: number;
+    title: string = "Intersection";
 
     drawBackground: Function;
     draw: Function;
@@ -58,6 +59,8 @@ class Intersection extends Component<Props, State> {
     }
 
     componentDidMount() {
+
+        document.title = this.title;
 
         this.canvas = this.refs.canvas;
         this.context = this.canvas.getContext('2d');
