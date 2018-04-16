@@ -14,17 +14,19 @@ const THREE = require('three');
 
 type Props = {};
 type State = {
-    agents: Array<IntersectionAgent>,
-    i: number
+    agents: Array<IntersectionAgent>;
+    drawingPath: boolean;
+    i: number;
 };
 
 class Intersection extends Component<Props, State> {
 
+    backgroundBuffer: HTMLCanvasElement = document.createElement('canvas');
     canvas: HTMLCanvasElement;
+    hasDrawn: boolean = false;
     running: boolean;
-    origin: THREE.Vector3;
     dim: number;
-    speedLimit: number;
+    speedLimit: number = 5;
     title: string = "Intersection";
 
     drawBackground: Function;
@@ -34,7 +36,7 @@ class Intersection extends Component<Props, State> {
     init: Function;
     controls: Object;
 
-    static capacity = 50;
+    static capacity = 5;
 
     constructor() {
 
@@ -42,20 +44,20 @@ class Intersection extends Component<Props, State> {
 
         this.state = {
             agents: [],
+            beginPath: false,
+            drawingPath: false,
             i: 0
         };
 
         this.running = true;
 
-        this.init = this.init.bind(this);
-        this.onClick = this.onClick.bind(this);
-        this.toggleRunning = this.toggleRunning.bind(this);
-        this.draw = this.draw.bind(this);
-        this.drawBackground = this.drawBackground.bind(this);
-
         this.controls = {
+            addAgents: this.addAgents,
             toggleRunning: this.toggleRunning
         };
+
+        this.backgroundBuffer.width = window.innerWidth;
+        this.backgroundBuffer.height = window.innerHeight;
     }
 
     componentDidMount() {
@@ -65,51 +67,50 @@ class Intersection extends Component<Props, State> {
         this.canvas = this.refs.canvas;
         this.context = this.canvas.getContext('2d');
 
-        const agents = this.state.agents;
-        
+        this.init();
+
+        this.canvas.addEventListener('mousedown', this.onMouseDown);
+        this.canvas.addEventListener('mouseup', this.onMouseUp);
+        this.canvas.addEventListener('mousemove', this.onMove);
+    }
+
+    init = () => {
+        this.draw();
+    }
+
+    addAgents = () => {
+
+        if (!this.hasDrawn) return;
+
+        const agents = [];
         const r = Math.round(Math.max(window.innerWidth, window.innerHeight) / 200);
 
-        while (agents.length < Intersection.capacity) {
-
+        for (let i = 0; i < Intersection.capacity; i++) {
+        
             const agent = new IntersectionAgent(0, 0, r);
             agent.setCanvasView(this);
+
+            let isBlack;
+
+            do {
+
+                agent.x = Math.round(Math.random() * window.innerWidth);
+                agent.y = Math.round(Math.random() * window.innerHeight);
+
+                const data = this.backgroundBuffer.getContext('2d').getImageData(agent.x, agent.y, 1, 1).data;
+                isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
+
+            } while (isBlack);
             
             agents.push(agent);
         }
 
-        this.setState({ agents }, this.init);
-
-        this.canvas.addEventListener('click', this.onClick);
-    }
-
-    init() {
-
-        // wait for image to load
-        if (!img.complete) return window.setTimeout(this.init, 10);
-
-        this.drawBackground();
-        
-        // coerce all agents onto the clover
-        this.state.agents.forEach((agent) => {
-            
-            const data = this.context.getImageData(agent.x, agent.y, 1, 1).data;
-            let isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
-
-            while (isBlack) {
-
-                agent.x = Math.round(Math.random() * this.dim);
-                agent.y = Math.round(Math.random() * this.dim);
-
-                const data = this.context.getImageData(this.origin.x + agent.x, this.origin.y + agent.y, 1, 1).data;
-
-                isBlack = data[0] === 0 && data[1] === 0 && data[2] === 0;
-            }
+        this.setState({
+            agents: this.state.agents.concat(agents)
         });
-
-        this.draw();
     }
 
-    drawBackground() {
+    drawBackground = () => {
 
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -119,18 +120,10 @@ class Intersection extends Component<Props, State> {
         this.context.fillStyle = 'black';
         this.context.fillRect(0, 0, w, h);
 
-        this.dim = w > h ? h : w;
-        const x = w > h ? (w - this.dim) / 2 : 0;
-        const y = w > h ? 0 : (h - this.dim) / 2;
-
-        this.speedLimit = this.dim * 0.006;
-
-        if (_.isNil(this.origin)) this.origin = new THREE.Vector3(x, y, 0);
-
-        this.context.drawImage(img, x, y, this.dim, this.dim);
+        this.context.drawImage(this.backgroundBuffer, 0, 0);
     }
 
-    draw() {
+    draw = () => {
 
         if (!this.running) return;
 
@@ -142,18 +135,46 @@ class Intersection extends Component<Props, State> {
         window.requestAnimationFrame(this.draw);
     }
 
-    toggleRunning() {
+    toggleRunning = () => {
         this.running = !this.running;
         if (this.running) this.draw();
         this.setState({ i: this.state.i + 1 });
     }
+
+    drawPath = () => {
+        this.setState({
+            drawingPath: true
+        });
+    }
     
-    onClick() {
+    onMouseDown = () => {
+        this.setState({
+            drawingPath: true
+        });
+    }
+
+    onMouseUp = () => {
+        this.setState({
+            drawingPath: false
+        });
+    }
+
+    onMove = (e) => {
+
+        if (!this.state.drawingPath) return;
+        
+        const context = this.backgroundBuffer.getContext('2d');
+        context.fillStyle = 'gray';
+        context.beginPath();
+        context.arc(e.x, e.y, 60, 0, 2 * Math.PI);
+        context.fill();
+
+        this.hasDrawn = true;
     }
 
     render() {
         return (
-            <div>
+            <div style={{overflow: 'hidden'}}>
                 <canvas ref="canvas" width={window.innerWidth} height={window.innerHeight} />
                 <IntersectionControls controls={this.controls} running={this.running} />
             </div>

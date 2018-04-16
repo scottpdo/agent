@@ -81,25 +81,9 @@ export default class IntersectionAgent extends Agent {
   // Override
   tick() {
 
-    const origin = this.cv.origin;
-    const dim = this.cv.dim;
-    const center = new THREE.Vector3(dim / 2, dim / 2, 0);
-
-    // various vectors and values...
-    const toCenter = center.clone().sub(this).normalize();
-    const toNext = this.next().clone().sub(this).normalize();
-    const dot = toNext.dot(toCenter);
-    const aimedAtCenter = dot > 0;
-    const closeToCenter = this.distanceTo(center) < dim / 4;
-
-    const onStraightAway = (
-      (this.x > 0.43 * dim && this.x < 0.57 * dim) ||
-      (this.y > 0.43 * dim && this.y < 0.57 * dim)
-    );
-
     // left/right in *screen* coordinates (to get pixel data)
-    const left = this.scanLeft().add(origin);
-    const right = this.scanRight().add(origin);
+    const left = this.scanLeft();
+    const right = this.scanRight();
 
     const context = this.cv.context;
     const leftData = context.getImageData(left.x, left.y, 1, 1).data;
@@ -119,39 +103,6 @@ export default class IntersectionAgent extends Agent {
 
     // if about to run off the road, make a sharp turn
     if (leftIsBlack && rightIsBlack) this.dir.add(Math.PI / 2);
-
-    // if approaching intersection, set an intention --
-    // - straight = 0
-    // - left = 1
-    // - right = 2
-    if (!this.nearIntersection && closeToCenter) this.intention = _.sample(IntersectionAgent.intentions);
-    
-    this.nearIntersection = closeToCenter;
-
-    if (this.nearIntersection) {
-
-      // assume we're approaching the intersection and slow down
-      this.slowDown();
-
-      // slowly turn left
-      if (this.intention === 1) {
-        this.dir.sub(0.01);
-      } else if (this.intention === 2) {
-        this.dir.add(0.01);
-      }
-    }
-
-    // if departing, speed up
-    if (!aimedAtCenter || !this.nearIntersection) this.speedUp();
-
-    // if not near the intersection but aimed toward it
-    // and on a straightaway, veer toward the center
-    if (!this.nearIntersection && onStraightAway && aimedAtCenter) {
-      const c = this.clone().sub(center);
-      const angle = Math.atan2(c.y, c.x) + Math.PI;
-      const ave = (9 * this.dir.value + angle) / 10;
-      this.dir.set(ave);
-    }
 
     let step = new THREE.Vector3();
 
@@ -177,7 +128,6 @@ export default class IntersectionAgent extends Agent {
   draw() {
     
     const context = this.cv.context;
-    const origin = this.cv.origin;
 
     context.save();
 
@@ -186,7 +136,7 @@ export default class IntersectionAgent extends Agent {
     context.beginPath();
 
     let a = this.next(2 * this.r);
-    context.moveTo(origin.x + a.x, origin.y + a.y);
+    context.moveTo(a.x, a.y);
 
     a = this.next(1.2 * this.r);
 
@@ -194,21 +144,21 @@ export default class IntersectionAgent extends Agent {
     a.applyAxisAngle(IntersectionAgent.Z, 3 * Math.PI / 4);
     a.add(this);
 
-    context.lineTo(origin.x + a.x, origin.y + a.y);
+    context.lineTo(a.x, a.y);
 
     a.sub(this);
     a.applyAxisAngle(IntersectionAgent.Z, -1.5 * Math.PI);
     a.add(this);
 
-    context.lineTo(origin.x + a.x, origin.y + a.y);
+    context.lineTo(a.x, a.y);
 
     context.fill();
 
     // context.fillStyle = 'red';
     // context.beginPath();
     // context.arc(
-    //   origin.x + this.x, 
-    //   origin.y + this.y, 
+    //   this.x, 
+    //   this.y, 
     //   this.r / 2, 
     //   0, 
     //   2 * Math.PI
@@ -221,8 +171,8 @@ export default class IntersectionAgent extends Agent {
     // context.fillStyle = 'yellow';
     // const ahead = this.ahead();
     // context.arc(
-    //   origin.x + ahead.x,
-    //   origin.y + ahead.y,
+    //   ahead.x,
+    //   ahead.y,
     //   1.4 * 2 * this.r,
     //   0, 2 * Math.PI
     // );

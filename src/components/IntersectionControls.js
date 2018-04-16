@@ -13,6 +13,7 @@ let style = {
 
 type Props = {
   controls: {
+    addAgents: Function,
     toggleRunning: Function
   },
   running: boolean
@@ -47,6 +48,9 @@ export default class IntersectionControls extends Component<Props, State> {
       <div style={style} ref="container">
         <button onClick={this.props.controls.toggleRunning}>
           {this.props.running ? "Pause" : "Play"}
+        </button>
+        <button onClick={this.props.controls.addAgents}>
+          Add Agents
         </button>
       </div>
     );
