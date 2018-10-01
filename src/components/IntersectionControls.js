@@ -14,6 +14,7 @@ let style = {
 type Props = {
   controls: {
     addAgents: Function,
+    setBrushSize: Function,
     toggleRunning: Function
   },
   running: boolean
@@ -36,9 +37,6 @@ export default class IntersectionControls extends Component<Props, State> {
     };
   }
 
-  componentDidMount() {
-  }
-
   render() {
 
     style.top = this.state.x;
@@ -51,7 +49,9 @@ export default class IntersectionControls extends Component<Props, State> {
         </button>
         <button onClick={this.props.controls.addAgents}>
           Add Agents
-        </button>
+        </button><br />
+        <label>Brush size</label>
+        <input type="range" min={5} max={100} onChange={this.props.controls.setBrushSize} defaultValue={40} />
       </div>
     );
   }

@@ -85,7 +85,7 @@ export default class IntersectionAgent extends Agent {
     const left = this.scanLeft();
     const right = this.scanRight();
 
-    const context = this.cv.context;
+    const context = this.cv.refs.canvas.getContext('2d');
     const leftData = context.getImageData(left.x, left.y, 1, 1).data;
     const leftIsBlack = leftData[0] === 0 && leftData[1] === 0 && leftData[2] === 0;
 
@@ -127,7 +127,7 @@ export default class IntersectionAgent extends Agent {
   // Override
   draw() {
     
-    const context = this.cv.context;
+    const context = this.cv.refs.canvas.getContext('2d');
 
     context.save();
 

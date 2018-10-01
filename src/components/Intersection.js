@@ -5,16 +5,10 @@ import _ from 'lodash';
 import IntersectionControls from './IntersectionControls';
 import IntersectionAgent from '../agents/IntersectionAgent';
 
-import imgUrl from '../img/clover.png';
-
-const img = document.createElement('img');
-img.src = imgUrl;
-
-const THREE = require('three');
-
 type Props = {};
 type State = {
     agents: Array<IntersectionAgent>;
+    brushSize: number;
     drawingPath: boolean;
     i: number;
 };
@@ -44,6 +38,7 @@ class Intersection extends Component<Props, State> {
 
         this.state = {
             agents: [],
+            brushSize: 40,
             beginPath: false,
             drawingPath: false,
             i: 0
@@ -53,6 +48,7 @@ class Intersection extends Component<Props, State> {
 
         this.controls = {
             addAgents: this.addAgents,
+            setBrushSize: this.setBrushSize,
             toggleRunning: this.toggleRunning
         };
 
@@ -65,13 +61,8 @@ class Intersection extends Component<Props, State> {
         document.title = this.title;
 
         this.canvas = this.refs.canvas;
-        this.context = this.canvas.getContext('2d');
 
         this.init();
-
-        this.canvas.addEventListener('mousedown', this.onMouseDown);
-        this.canvas.addEventListener('mouseup', this.onMouseUp);
-        this.canvas.addEventListener('mousemove', this.onMove);
     }
 
     init = () => {
@@ -115,12 +106,14 @@ class Intersection extends Component<Props, State> {
         const w = window.innerWidth;
         const h = window.innerHeight;
 
-        this.context.clearRect(0, 0, w, h);
+        const context = this.refs.canvas.getContext('2d');
 
-        this.context.fillStyle = 'black';
-        this.context.fillRect(0, 0, w, h);
+        context.clearRect(0, 0, w, h);
 
-        this.context.drawImage(this.backgroundBuffer, 0, 0);
+        context.fillStyle = 'black';
+        context.fillRect(0, 0, w, h);
+
+        context.drawImage(this.backgroundBuffer, 0, 0);
     }
 
     draw = () => {
@@ -146,27 +139,38 @@ class Intersection extends Component<Props, State> {
             drawingPath: true
         });
     }
+
+    setBrushSize = (e: SyntheticInputEvent<HTMLInputElement>) => {
+        this.setState({
+            brushSize: +(e.currentTarget.value)
+        });
+    }
     
-    onMouseDown = () => {
+    onMouseDown = (e: SyntheticMouseEvent<>) => {
         this.setState({
             drawingPath: true
         });
+        
+        this.drawPath(e);
     }
 
-    onMouseUp = () => {
+    reset = () => {
         this.setState({
             drawingPath: false
         });
     }
 
-    onMove = (e) => {
-
+    onMouseMove = (e: SyntheticMouseEvent<>) => {
         if (!this.state.drawingPath) return;
+        this.drawPath(e);
+    }
+
+    drawPath = (e: SyntheticMouseEvent<>) => {
         
         const context = this.backgroundBuffer.getContext('2d');
         context.fillStyle = 'gray';
         context.beginPath();
-        context.arc(e.x, e.y, 60, 0, 2 * Math.PI);
+        context.arc(e.clientX, e.clientY, this.state.brushSize, 0, 2 * Math.PI);
         context.fill();
 
         this.hasDrawn = true;
@@ -175,7 +179,15 @@ class Intersection extends Component<Props, State> {
     render() {
         return (
             <div style={{overflow: 'hidden'}}>
-                <canvas ref="canvas" width={window.innerWidth} height={window.innerHeight} />
+                <canvas 
+                    ref="canvas"
+                    width={window.innerWidth} 
+                    height={window.innerHeight} 
+                    onMouseMove={this.onMouseMove}
+                    onMouseDown={this.onMouseDown}
+                    onMouseUp={this.reset}
+                    onMouseLeave={this.reset}
+                    />
                 <IntersectionControls controls={this.controls} running={this.running} />
             </div>
         );
